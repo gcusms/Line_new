@@ -1,2 +1,0 @@
-/usr/bin/ar qc libCamera.a  CMakeFiles/Camera.dir/devices/camera/mv_video_capture.cpp.o
-/usr/bin/ranlib libCamera.a
