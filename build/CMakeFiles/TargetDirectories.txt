@@ -1,0 +1,9 @@
+/home/sms/桌面/Line_new/build/CMakeFiles/install/strip.dir
+/home/sms/桌面/Line_new/build/CMakeFiles/install/local.dir
+/home/sms/桌面/Line_new/build/CMakeFiles/install.dir
+/home/sms/桌面/Line_new/build/CMakeFiles/Camera.dir
+/home/sms/桌面/Line_new/build/CMakeFiles/Robot_wolf.dir
+/home/sms/桌面/Line_new/build/CMakeFiles/serial.dir
+/home/sms/桌面/Line_new/build/CMakeFiles/edit_cache.dir
+/home/sms/桌面/Line_new/build/CMakeFiles/rebuild_cache.dir
+/home/sms/桌面/Line_new/build/CMakeFiles/list_install_components.dir
