@@ -1,10 +1,46 @@
 cmake_minimum_required(VERSION 3.10)
 project(Robot_wolf)
 
+add_executable(${PROJECT_NAME} main.cpp)
 add_definitions(-DAPI_EXPORTS)
 option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g -Wfatal-errors -D_MWAITXINTRIN_H_INCLUDED -pthread")
+
+include_directories(
+    #OpenVINO推理引擎的头文件
+    /opt/intel/openvino_2021/deployment_tools/inference_engine/include/
+    /opt/intel/openvino_2021/deployment_tools/ngraph/include/
+)
+
+#查找必要的依赖包
+find_package(OpenCV REQUIRED)
+set(InferenceEngine_DIR "/opt/intel/openvino_2021/deployment_tools/inference_engine/share")
+find_package(InferenceEngine)
+set(ngraph_DIR "/opt/intel/openvino_2021/deployment_tools/ngraph")
+# find_package(ngraph REQUIRED)
+set(ngraph_LIBRARIES "/opt/intel/openvino_2021/deployment_tools/ngraph/lib/libngraph.so")
+set(ngraph_INCLUDE_DIRS "/opt/intel/openvino_2021/deployment_tools/ngraph/include/")
+
+
+
+# 编译detector.so black_box
+include_directories(${PROJECT_SOURCE_DIR}/infer)
+add_library (detector SHARED ${CMAKE_CURRENT_SOURCE_DIR}/infer/detector.cpp)
+target_include_directories(detector
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+        PUBLIC ${OpenCV_INCLUDE_DIR}
+        PUBLIC ${InferenceEngine_INCLUDE_DIRS}
+        # PUBLIC ${ngraph_INCLUDE_DIRS}
+)
+target_link_libraries(detector
+        ${InferenceEngine_LIBRARIES}
+        # ${ngraph_LIBRARIES}
+)
+target_link_libraries(${PROJECT_NAME} 
+        PRIVATE
+        detector
+            )    
 
 #opencv
 find_package( OpenCV REQUIRED )
@@ -13,19 +49,24 @@ include_directories( ${OpenCV_INCLUDE_DIRS} )
 include_directories(../)
 include_directories(.)
 
-add_executable(${PROJECT_NAME} main.cpp)
 
 #link the opencv packate
-target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )
+target_link_libraries( ${PROJECT_NAME} 
+                PRIVATE    
+                ${OpenCV_LIBS} )
 #fmt
 find_package(fmt REQUIRED)
-target_link_libraries(${PROJECT_NAME} fmt::fmt)
+target_link_libraries(${PROJECT_NAME} 
+                PRIVATE
+                fmt::fmt)
 #Camera
 add_library(MVSDK SHARED IMPORTED)
 add_library(Camera devices/camera/mv_video_capture.cpp)
 set(MIMDVISION_SDK_LIBRARY /lib/libMVSDK.so)
 set_property(TARGET MVSDK PROPERTY IMPORTED_LOCATION ${MIMDVISION_SDK_LIBRARY})
-target_link_libraries(${PROJECT_NAME} Camera MVSDK)
+target_link_libraries(${PROJECT_NAME} 
+                PRIVATE
+                Camera MVSDK)
 
 
 # new serial
@@ -38,7 +79,9 @@ set(serial_SRCS
 )
 include_directories(devices/serial)
 add_library(serial ${serial_SRCS})
-target_link_libraries(${PROJECT_NAME} serial)
+target_link_libraries(${PROJECT_NAME} 
+                    PRIVATE
+                    serial)
 
 set(CONFIG_FILE_PATH ${PROJECT_SOURCE_DIR}/configs)
 set(SOURCE_PATH ${PROJECT_SOURCE_DIR})
@@ -48,3 +91,5 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "SOURCE_PATH=\"${PROJECT_SOUR
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
+

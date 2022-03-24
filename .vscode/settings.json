@@ -53,6 +53,8 @@
         "typeinfo": "cpp",
         "list": "cpp",
         "set": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "unordered_set": "cpp",
+        "regex": "cpp"
     }
 }
