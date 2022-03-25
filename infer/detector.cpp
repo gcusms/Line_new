@@ -136,7 +136,7 @@ bool Detector::process_frame(Mat& inframe,vector<Object>& detected_objects){
     vector<int> final_id;
     dnn::NMSBoxes(origin_rect,origin_rect_cof,_cof_threshold,_nms_area_threshold,final_id);
     //根据final_id获取最终结果
-    for(int i=0;i<final_id.size();++i){
+    for(size_t i=0;i<final_id.size();++i){
         Rect resize_rect= origin_rect[final_id[i]];
         detected_objects.push_back(Object{
             origin_rect_cof[final_id[i]],

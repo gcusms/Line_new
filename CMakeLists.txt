@@ -68,6 +68,12 @@ target_link_libraries(${PROJECT_NAME}
                 PRIVATE
                 Camera MVSDK)
 
+#Realsense
+find_package(realsense2 REQUIRED)
+target_link_libraries(${PROJECT_NAME}  
+                        PRIVATE
+                        ${realsense2_LIBRARY}
+                        )
 
 # new serial
 set(serial_SRCS
