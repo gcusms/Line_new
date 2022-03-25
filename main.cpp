@@ -30,18 +30,18 @@ void uartReadThread(const std::shared_ptr<RoboSerial> &serial,
                     RoboInf &robo_inf) {
   while (true) try {
       serial->ReceiveInfo(robo_inf);
-      std::this_thread::sleep_for(std::chrono::microseconds(1));
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     } catch (const std::exception &e) {
       static int serial_read_excepted_times{0};
       if (serial_read_excepted_times++ > 3) {
-      std::this_thread::sleep_for(std::chrono::microseconds(10000));
+      std::this_thread::sleep_for(std::chrono::seconds(10));
         fmt::print("[{}] read serial excepted to many times, sleep 10s.\n",
                    idntifier_red);
         serial_read_excepted_times = 0;
       }
       fmt::print("[{}] serial exception: {} serial restarting...\n",
                  idntifier_red, e.what());
-      std::this_thread::sleep_for(std::chrono::microseconds(10000));
+      std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 }
 void uartThread(RoboInf &robo_inf, const std::shared_ptr<RoboSerial> &serial) {
@@ -80,7 +80,7 @@ void imageProcess_thread(cv::Mat &frame)
     // the part of the inferences 
     Detector* detector = new Detector;
     string xml_path = "../model/best.xml";
-    detector->init(xml_path,0.4,0.5);
+    detector->init(xml_path,0.15,0.75);
     // Mat src = imread("../model/13.jpg");
     pipeline pipe;                           // 创建数据管道
     // start() 函数返回数据管道的 profile
@@ -109,7 +109,6 @@ void imageProcess_thread(cv::Mat &frame)
         // 转成 Mat 类型
         Mat frame(Size(color_width, color_height), CV_8UC3,             
         (void*)video_src.get_data(),Mat::AUTO_STEP);
-
         // 定义并获取距离数据（单位： m ）
         float distance = depth_src.get_distance(width / 2, height / 2); 
 
@@ -143,7 +142,10 @@ void imageProcess_thread(cv::Mat &frame)
                         0.5,
                         cv::LINE_4);
             }
+            cv::cvtColor(osrc,osrc,cv::COLOR_RGB2BGR);
             imshow("result",osrc);
+            cv::imwrite("/home/sms/tu/block_test.jpg",osrc);
+
             cv::waitKey(1);
             // imshow("frame", frame); // 显示
         }

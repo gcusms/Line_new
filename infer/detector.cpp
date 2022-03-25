@@ -1,11 +1,13 @@
 #include "detector.h"
-
+#include <omp.h>
 Detector::Detector(){}
 
 Detector::~Detector(){}
 string names2[] = {"blue_yellow","blue_white","blue_blue"
-                ,"red_yellow","red_white","red_red"};
+        ,"red_yellow","red_white","red_red"};
 
+string name2_re[] = {"red_red","red_white","red_yellow",
+                    "blue_blue","blue_white","blue_white"};
 
 //注意此处的阈值是框和物体prob乘积的阈值
 bool Detector::parse_yolov5(const Blob::Ptr &blob,int net_grid,float cof_threshold,
@@ -17,6 +19,8 @@ bool Detector::parse_yolov5(const Blob::Ptr &blob,int net_grid,float cof_thresho
    //int item_size = 6;
    int item_size = 11;
     size_t anchor_n = 3;
+    // omp_set_num_threads(2);
+    #pragma omp parallel for
     for(int n=0;n<anchor_n;++n)
         for(int i=0;i<net_grid;++i)
             for(int j=0;j<net_grid;++j)
@@ -25,8 +29,7 @@ bool Detector::parse_yolov5(const Blob::Ptr &blob,int net_grid,float cof_thresho
                 box_prob = sigmoid(box_prob);
                 //框置信度不满足则整体置信度不满足
                 if(box_prob < cof_threshold)
-                    continue;
-                
+                    continue;  
                 //注意此处输出为中心点坐标,需要转化为角点坐标
                 double x = output_blob[n*net_grid*net_grid*item_size + i*net_grid*item_size + j*item_size + 0];
                 double y = output_blob[n*net_grid*net_grid*item_size + i*net_grid*item_size + j*item_size + 1];
@@ -58,7 +61,7 @@ bool Detector::parse_yolov5(const Blob::Ptr &blob,int net_grid,float cof_thresho
                 Rect rect = Rect(round(r_x),round(r_y),round(w),round(h));
                 o_rect.push_back(rect);
                 o_rect_cof.push_back(cof);
-                label_input.push_back(idx -5);
+                label_input.push_back(idx -5 );
             }
     if(o_rect.size() == 0) return false;
     else return true;
@@ -103,13 +106,15 @@ bool Detector::process_frame(Mat& inframe,vector<Object>& detected_objects){
         return false;
     }
     resize(inframe,inframe,Size(640,640));
-    cvtColor(inframe,inframe,COLOR_BGR2RGB);
+    // cvtColor(inframe,inframe,COLOR_BGR2RGB);
     size_t img_size = 640*640;
     InferRequest::Ptr infer_request = _network.CreateInferRequestPtr();
     Blob::Ptr frameBlob = infer_request->GetBlob(_input_name);
     InferenceEngine::LockedMemory<void> blobMapped = InferenceEngine::as<InferenceEngine::MemoryBlob>(frameBlob)->wmap();
     float* blob_data = blobMapped.as<float*>();
     //nchw
+    // omp_set_num_threads(4);  
+    #pragma omp parallel for
     for(size_t row =0;row<640;row++){
         for(size_t col=0;col<640;col++){
             for(size_t ch =0;ch<3;ch++){
