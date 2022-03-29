@@ -31,6 +31,7 @@ class RoboSerial : public serial::Serial {
     robo_inf.manual_catch_cube_mode.store(uart_buff_struct.manual_catch_cube_mode);
     robo_inf.detect_cube_mode.store(uart_buff_struct.detect_cube_mode);
     robo_inf.value_d.store(uart_buff_struct.value_dd);
+    robo_inf.robot_self_color.store(uart_buff_struct.robot_clor);
   }
 
  private:

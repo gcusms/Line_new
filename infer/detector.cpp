@@ -61,7 +61,7 @@ bool Detector::parse_yolov5(const Blob::Ptr &blob,int net_grid,float cof_thresho
                 Rect rect = Rect(round(r_x),round(r_y),round(w),round(h));
                 o_rect.push_back(rect);
                 o_rect_cof.push_back(cof);
-                label_input.push_back(idx -5 );
+                label_input.push_back(idx -5);
             }
     if(o_rect.size() == 0) return false;
     else return true;
@@ -146,8 +146,10 @@ bool Detector::process_frame(Mat& inframe,vector<Object>& detected_objects){
         detected_objects.push_back(Object{
             origin_rect_cof[final_id[i]],
             names2[label[final_id[i]]],
-            resize_rect
+            resize_rect,
+            label[final_id[i]]
         });
+
     }
     return true;
 }

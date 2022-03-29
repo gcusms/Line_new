@@ -6,6 +6,9 @@
 #include <chrono>
 #include <opencv2/dnn/dnn.hpp>
 #include <cmath>
+#include "utils.hpp"
+
+
 using namespace std;
 using namespace cv;
 using namespace InferenceEngine;
@@ -17,6 +20,7 @@ public:
         float prob;
         std::string name;
         cv::Rect rect;
+        int id;
     } Object;
     Detector();
     ~Detector();

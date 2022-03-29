@@ -23,6 +23,7 @@ set(ngraph_LIBRARIES "/opt/intel/openvino_2021/deployment_tools/ngraph/lib/libng
 set(ngraph_INCLUDE_DIRS "/opt/intel/openvino_2021/deployment_tools/ngraph/include/")
 
 
+include_directories(${PROJECT_SOURCE_DIR}/slovePnP)
 
 # 编译detector.so black_box
 include_directories(${PROJECT_SOURCE_DIR}/infer)
@@ -91,8 +92,8 @@ target_link_libraries(${PROJECT_NAME}
 
 set(CONFIG_FILE_PATH ${PROJECT_SOURCE_DIR}/configs)
 set(SOURCE_PATH ${PROJECT_SOURCE_DIR})
-target_compile_definitions(${PROJECT_NAME} PRIVATE "CONFIG_FILE_PATH=\"${CONFIG_FILE_PATH}\"")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "SOURCE_PATH=\"${PROJECT_SOURCE_DIR}\"")
+target_compile_definitions(${PROJECT_NAME}  PRIVATE "CONFIG_FILE_PATH=\"${CONFIG_FILE_PATH}\"")
+target_compile_definitions(${PROJECT_NAME}  PRIVATE "SOURCE_PATH=\"${PROJECT_SOURCE_DIR}\"")
 
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
