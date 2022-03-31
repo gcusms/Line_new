@@ -59,7 +59,6 @@ void uartThread(RoboInf &robo_inf, const std::shared_ptr<RoboSerial> &serial) {
   //     std::cerr << e.what() << '\n';
   //   }
   // }
-  
 }
 void imageProcess_thread(cv::Mat &frame,RoboInf &robo_inf,const std::shared_ptr<RoboSerial> &serial)
 {
@@ -110,18 +109,23 @@ void imageProcess_thread(cv::Mat &frame,RoboInf &robo_inf,const std::shared_ptr<
             Mat osrc = frame.clone();
             resize(osrc,osrc,Size(640,640));
             vector<Detector::Object> detected_objects;
-            auto start = chrono::high_resolution_clock::now();
+
+            // auto start = chrono::high_resolution_clock::now();
+            auto t = (double)cv::getTickCount();
             detector->process_frame(osrc,detected_objects);
-            auto end = chrono::high_resolution_clock::now();
-            std::chrono::duration<double> diff = end - start;
-            cout<<"use "<<diff.count()<<" s" << endl;
+            t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+            auto fps = 1.0 / t;
+            fmt::print("FPS:{}\n",fps);
+            // auto end = chrono::high_resolution_clock::now();
+            // std::chrono::duration<double> diff = end - start;
+            // cout<<"use "<<diff.count()<<" s" << endl;
+
             Rect rect = cv::Rect(0,0,0,0);
             for(size_t i=0;i< detected_objects.size();++i){
                 int xmin = detected_objects[i].rect.x;
                 int ymin = detected_objects[i].rect.y;
                 int width = detected_objects[i].rect.width;
                 int height = detected_objects[i].rect.height;
-
                 rect = cv::Rect(xmin, ymin, width, height);//左上坐标（x,y）和矩形的长(x)宽(y)
                 RoboCatchCmdUartBuff reset_buff;
                 pnp->solvePnP(object_3d_rect, rect, pnp_angle, // to do:test the real data
@@ -153,9 +157,8 @@ void imageProcess_thread(cv::Mat &frame,RoboInf &robo_inf,const std::shared_ptr<
                 serial->write((uint8_t *)&reset_buff, sizeof(reset_buff));
                   continue;
                 }
-
                 reset_buff.yaw_angle = img_sub * 0.01;
-
+                
                 if (detected_objects[i].id == 0 || detected_objects[i].id == 3){ // 正面
                     reset_buff.cube_state = 0x01;
                 } else if (detected_objects[i].id == 1 || detected_objects[i].id == 4){ // 反面
