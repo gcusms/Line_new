@@ -9,7 +9,7 @@ string names2[] = {"blue_yellow","blue_white","blue_blue"
 string name2_re[] = {"red_red","red_white","red_yellow",
                     "blue_blue","blue_white","blue_white"};
 
-//注意此处的阈值是框和物体prob乘积的阈值
+//注意此处的阈值是框和物体prob乘积的阈值s
 bool Detector::parse_yolov5(const Blob::Ptr &blob,int net_grid,float cof_threshold,
     vector<Rect>& o_rect,vector<float>& o_rect_cof,vector<int>& label_input){
     vector<int> anchors = get_anchors(net_grid);
@@ -147,9 +147,11 @@ bool Detector::process_frame(Mat& inframe,vector<Object>& detected_objects){
             origin_rect_cof[final_id[i]],
             names2[label[final_id[i]]],
             resize_rect,
-            label[final_id[i]]
+            label[final_id[i]],
+            inframe.cols * 0.5  - resize_rect.y,
+            inframe.rows * 0.5  - resize_rect.x,
+            std::pow(inframe.rows * 0.5 * 0.75 - resize_rect.y*0.75,2) + std::pow(inframe.cols * 0.5 - resize_rect.x,2)
         });
-
     }
     return true;
 }

@@ -16,12 +16,19 @@ using namespace InferenceEngine;
 class Detector
 {
 public:
-    typedef struct {
+    typedef struct Object{
         float prob;
         std::string name;
         cv::Rect rect;
         int id;
-    } Object;
+        int dis_cols;
+        int dis_rows;
+        int dis_;
+        bool operator < (const Object &y) const
+        {
+            return dis_ < y.dis_; 
+        }
+    };
     Detector();
     ~Detector();
     //初始化

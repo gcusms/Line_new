@@ -120,79 +120,113 @@ void imageProcess_thread(cv::Mat &frame,RoboInf &robo_inf,const std::shared_ptr<
             // std::chrono::duration<double> diff = end - start;
             // cout<<"use "<<diff.count()<<" s" << endl;
 
+            
             Rect rect = cv::Rect(0,0,0,0);
-            for(size_t i=0;i< detected_objects.size();++i){
-                int xmin = detected_objects[i].rect.x;
-                int ymin = detected_objects[i].rect.y;
-                int width = detected_objects[i].rect.width;
-                int height = detected_objects[i].rect.height;
-                rect = cv::Rect(xmin, ymin, width, height);//左上坐标（x,y）和矩形的长(x)宽(y)
-                RoboCatchCmdUartBuff reset_buff;
-                pnp->solvePnP(object_3d_rect, rect, pnp_angle, // to do:test the real data
-                              pnp_coordinate_mm, pnp_depth);
-                reset_buff.yaw_angle = cube_target_distance_offset - pnp_angle.x;
-                float img_sub = 0.0f;
-                float disatnce_get = 0.0f;
-                cv::circle(osrc,cv::Point(xmin + width * 0.5, ymin + height *0.5),2,
-                cv::Scalar(255,255,255),-1,cv::LINE_8);
-                disatnce_get = depth_src.get_distance(xmin + width * 0.2, ymin + height *0.2);
-                if (!judgeTheCube(rect,frame,robo_inf,reset_buff,img_sub))  // 不在合适的范围里面
-                {
+            RoboCatchCmdUartBuff reset_buff;
+            
+            // for(size_t i=0;i< detected_objects.size();++i){
+            //     int xmin = detected_objects[i].rect.x;
+            //     int ymin = detected_objects[i].rect.y;
+            //     int width = detected_objects[i].rect.width;
+            //     int height = detected_objects[i].rect.height;
+            //     rect = cv::Rect(xmin, ymin, width, height);//左上坐标（x,y）和矩形的长(x)宽(y)
+            //     resetRect(rect);
+            //     pnp->solvePnP(object_3d_rect, rect, pnp_angle, // to do:test the real data
+            //                   pnp_coordinate_mm, pnp_depth);
+            //     reset_buff.yaw_angle = cube_target_distance_offset - pnp_angle.x;
+            //     float img_sub = 0.0f;
+            //     float disatnce_get = 0.0f;
+            //     cv::circle(osrc,cv::Point(xmin + width * 0.5, ymin + height *0.5),2,
+            //     cv::Scalar(255,255,255),-1,cv::LINE_8);
+                // disatnce_get = depth_src.get_distance(xmin + width * 0.2, ymin + height *0.2);
+//                 if (!judgeTheCube(rect,frame,robo_inf,reset_buff,img_sub))  // 不在合适的范围里面
+//                 {
+// #ifdef DRAW_RECT == 1
+//     cv::rectangle(frame, 
+//     rect, 
+//     cv::Scalar(0, 0, 0),
+//     2,
+//     LINE_8,
+//     0);
+//   putText(frame,detected_objects[i].name +"dis"+std::to_string(disatnce_get),
+//     Point(xmin,ymin - 10),cv::FONT_HERSHEY_COMPLEX,
+//     0.7,
+//     cv::Scalar(0, 0, 0),
+//     0.5,
+//     cv::LINE_4);
+// #endif
+//                 reset_buff.yaw_angle = img_sub * 0.01;
+//                 serial->write((uint8_t *)&reset_buff, sizeof(reset_buff));
+//                 continue;
+//                 }
+//                 reset_buff.yaw_angle = img_sub * 0.01;
+                // if (detected_objects[i].id == 0 || detected_objects[i].id == 3){ // 正面
+                //     reset_buff.cube_state = 0x01;
+                // } else if (detected_objects[i].id == 1 || detected_objects[i].id == 4){ // 反面
+                //   reset_buff.cube_state = 0x02;
+                // } else if (detected_objects[i].id == 2 || detected_objects[i].id == 5) {  // 竖直
+                //   reset_buff.cube_state = 0x03;
+                // }
+// #ifdef DRAW_RECT == 1
+// cv::rectangle(frame, 
+//               rect, 
+//               cv::Scalar(255, 0, 255),
+//               2,
+//               LINE_8,
+//               0);
+// putText(frame,detected_objects[i].name +" "+std::to_string(disatnce_get),
+//         Point(xmin,ymin - 10),cv::FONT_HERSHEY_COMPLEX,
+//         0.7,
+//         cv::Scalar(255,0,255),
+//         0.5,
+//         cv::LINE_4);
+// #endif
+//             }
+            std::sort(detected_objects.begin(),detected_objects.end());
+            cv::Rect temt_rect_ = detected_objects.at(0).rect;
+            resetRect(temt_rect_);
+            float angle_rows= 0.f;
+            if (!judgeTheCube(temt_rect_,frame,robo_inf,reset_buff,angle_rows))  // 不在合适的范围里面
+            {
 #ifdef DRAW_RECT == 1
-    cv::rectangle(osrc, 
-    Rect(xmin, ymin, width, height), 
-    cv::Scalar(0, 0, 0),
-    2,
-    LINE_8,
-    0);
-  putText(osrc,detected_objects[i].name +"dis"+std::to_string(disatnce_get),
-    Point(xmin,ymin - 10),cv::FONT_HERSHEY_COMPLEX,
-    0.7,
-    cv::Scalar(0, 0, 0),
-    0.5,
-    cv::LINE_4);
-
+    cv::rectangle(frame, 
+          temt_rect_, 
+          cv::Scalar(0, 0, 0),
+          2,
+          LINE_8,
+          0);
 #endif
-                reset_buff.yaw_angle = img_sub * 0.01;
-                serial->write((uint8_t *)&reset_buff, sizeof(reset_buff));
-                  continue;
-                }
-                reset_buff.yaw_angle = img_sub * 0.01;
-                
-                if (detected_objects[i].id == 0 || detected_objects[i].id == 3){ // 正面
-                    reset_buff.cube_state = 0x01;
-                } else if (detected_objects[i].id == 1 || detected_objects[i].id == 4){ // 反面
-                  reset_buff.cube_state = 0x02;
-                } else if (detected_objects[i].id == 2 || detected_objects[i].id == 5) {  // 竖直
-                  reset_buff.cube_state = 0x03;
-                }
-                serial->write((uint8_t *)&reset_buff, sizeof(reset_buff));
-#ifdef DRAW_RECT == 1
-cv::rectangle(osrc, 
-              Rect(xmin, ymin, width, height), 
-              cv::Scalar(255, 0, 255),
+            } else {
+            cv::rectangle(frame, 
+              temt_rect_, 
+              cv::Scalar(0,255,0),
               2,
               LINE_8,
               0);
-putText(osrc,detected_objects[i].name +" "+std::to_string(disatnce_get),
-        Point(xmin,ymin - 10),cv::FONT_HERSHEY_COMPLEX,
-        0.7,
-        cv::Scalar(255,0,255),
-        0.5,
-        cv::LINE_4);
-
-#endif
             }
-            cv::cvtColor(osrc,osrc,cv::COLOR_RGB2BGR);
-            cv::line(osrc,cv::Point(osrc.cols* 0.53,0),cv::Point(osrc.cols * 0.53,osrc.rows),
+            reset_buff.yaw_angle = angle_rows * 0.01;
+            if (detected_objects.at(0).id == 0 || detected_objects.at(0).id == 3){ // 正面
+                    reset_buff.cube_state = 0x01;
+            } else if (detected_objects.at(0).id == 1 || detected_objects.at(0).id == 4){ // 反面
+              reset_buff.cube_state = 0x02;
+            } else if (detected_objects.at(0).id == 2 || detected_objects.at(0).id == 5) {  // 竖直
+              reset_buff.cube_state = 0x03;
+            }
+            cout << "cube_statue = " << (int)reset_buff.cube_state << endl;
+            serial->write((uint8_t *)&reset_buff, sizeof(reset_buff));
+
+            cv::cvtColor(frame,frame,cv::COLOR_RGB2BGR);
+            cv::line(frame,cv::Point(frame.cols* 0.53,0),cv::Point(frame.cols * 0.53,frame.rows),
                     cv::Scalar(0,255,255),2,cv::LINE_8);
-            cv::line(osrc,cv::Point(osrc.cols* 0.57,0),cv::Point(osrc.cols * 0.57,osrc.rows),
+            cv::line(frame,cv::Point(frame.cols* 0.57,0),cv::Point(frame.cols * 0.57,frame.rows),
                     cv::Scalar(0,255,255),2,cv::LINE_8);
-            cv::imshow("result",osrc);
+            cv::imshow("result",frame);
             // cv::imwrite("block_test.jpg",osrc);
             cv::waitKey(1);
             // imshow("frame", frame); // 显示
+            detected_objects.clear();
         }
+
     }
 }
 int main()

@@ -1,6 +1,8 @@
 #pragma once
 #include <atomic>
 #include <opencv4/opencv2/highgui/highgui.hpp>
+#include <fmt/core.h>
+#include <iostream>
 
 
 #define CUBE_1 0x01 // cube_1(biggest)
@@ -82,7 +84,7 @@ struct RoboCatchCmdUartBuff {
   uint8_t cube_state = 0x00;
   uint8_t cube_type = 0x00;
   float yaw_angle = 0.f;
-  float distance_set = 0.f;
+  int distance_set = 0;
   uint8_t E_flag = 'E';
 } __attribute__((packed));
 
@@ -111,17 +113,21 @@ struct RoboInfUartBuff {
 bool judgeTheCube(cv::Rect &rect_input,const cv::Mat &src_img_input,
                       RoboInf &robo_inf,RoboCatchCmdUartBuff &reset_buff,float& img_sub)
   {
+    // 640 * 480
+    // 还原长度
     img_sub  = rect_input.x + rect_input.width *0.5;
-    // reset_buff.distance_set = (src_img_input.rows - (rect_input.y + rect_input.height))*0.125;
+    reset_buff.distance_set = (src_img_input.rows - rect_input.y);
+    std::cout << "distance_set = " <<reset_buff.distance_set << std::endl;
     if (reset_buff.distance_set < 0) {
       reset_buff.distance_set = 0;
     }
     if(img_sub > src_img_input.cols * 0.53 && 
        img_sub < src_img_input.cols *0.57) {
       img_sub -= src_img_input.cols *((0.53+0.57) * 0.5);
-      // if (reset_buff.distance_set < 50) {
-      //    reset_buff.cube_needen = 0x02;
-      // }
+      if (reset_buff.distance_set < 200) {
+         reset_buff.cube_needen = 0x02;
+         return true;
+      }
       reset_buff.cube_needen = 0x01;
       return true;
     }
@@ -141,3 +147,13 @@ bool judgeTheCube_new(cv::Rect &rect_input,const cv::Mat src_img_input,
     }
   return false;
 }
+
+void resetRect(cv::Rect & input_r)
+{
+  static float rate = 480.0 / 640.0;
+  input_r.height *= rate;
+  input_r.y *= rate;
+  // std::cout << "rate:" << rate << std::endl;
+}
+
+
