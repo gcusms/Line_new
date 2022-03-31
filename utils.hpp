@@ -54,18 +54,6 @@ struct RoboInf {
   std::atomic<double> value_d;  // 测试
 };
 
-bool judgeTheCube(cv::Rect &rect_input,const cv::Mat src_img_input,
-                      RoboInf &robo_inf,RoboCatchCmdUartBuff &reset_buff)
-  {
-    int center_x_judge = rect_input.x + rect_input.width *0.5;
-    if(center_x_judge > src_img_input.cols * 0.3 && 
-       center_x_judge < src_img_input.cols *0.7) {
-      reset_buff.cube_needen = 0x01;
-      return true;
-    }
-  reset_buff.cube_needen = 0x00;
-  return false;
-}
 
 // send R2 spin command
 struct RoboSpinCmdUartBuff {
@@ -90,10 +78,11 @@ struct RoboGoCmdUartBuff {
 struct RoboCatchCmdUartBuff {
   uint8_t S_flag = 'S';
   uint8_t cube_needen = 0x00;
-  uint8_t cmd_type = CATCH_SIGN;
+  // uint8_t cmd_type = CATCH_SIGN;
   uint8_t cube_state = 0x00;
   uint8_t cube_type = 0x00;
   float yaw_angle = 0.f;
+  float distance_set = 0.f;
   uint8_t E_flag = 'E';
 } __attribute__((packed));
 
@@ -119,3 +108,36 @@ struct RoboInfUartBuff {
 
 } __attribute__((packed));
 
+bool judgeTheCube(cv::Rect &rect_input,const cv::Mat &src_img_input,
+                      RoboInf &robo_inf,RoboCatchCmdUartBuff &reset_buff,float& img_sub)
+  {
+    img_sub  = rect_input.x + rect_input.width *0.5;
+    // reset_buff.distance_set = (src_img_input.rows - (rect_input.y + rect_input.height))*0.125;
+    if (reset_buff.distance_set < 0) {
+      reset_buff.distance_set = 0;
+    }
+    if(img_sub > src_img_input.cols * 0.53 && 
+       img_sub < src_img_input.cols *0.57) {
+      img_sub -= src_img_input.cols *((0.53+0.57) * 0.5);
+      // if (reset_buff.distance_set < 50) {
+      //    reset_buff.cube_needen = 0x02;
+      // }
+      reset_buff.cube_needen = 0x01;
+      return true;
+    }
+    img_sub -= src_img_input.cols *((0.53+0.57)* 0.5);
+    reset_buff.cube_needen = 0x00;
+    return false;
+}
+
+
+bool judgeTheCube_new(cv::Rect &rect_input,const cv::Mat src_img_input,
+                      RoboInf &robo_inf)
+  {
+    int center_x_judge = rect_input.x + rect_input.width *0.5;
+    if(center_x_judge > src_img_input.cols * 0.3 && 
+       center_x_judge < src_img_input.cols *0.7) {
+      return true;
+    }
+  return false;
+}
