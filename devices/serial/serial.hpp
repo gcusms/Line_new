@@ -28,8 +28,6 @@ class RoboSerial : public serial::Serial {
     while (uart_S_flag != 'S')
       this->read(&uart_S_flag, 1);
     this->read((uint8_t *)&uart_buff_struct, sizeof(uart_buff_struct));
-    // std::cout << "get_mode:"<< (int)uart_buff_struct.mode << std::endl;
-
     if (uart_buff_struct.mode == NOTHING) {
       if (robo_inf.catch_cube_mode_status.load() != CatchMode::off)
         robo_inf.catch_cube_mode_status.store(CatchMode::off);
@@ -40,7 +38,6 @@ class RoboSerial : public serial::Serial {
       if (robo_inf.catch_cube_mode_status.load() == CatchMode::off)
         robo_inf.catch_cube_mode_status.store(CatchMode::catch_cube);
     }else if (uart_buff_struct.mode == DETECT_MODE) {
-      // if (robo_inf.catch_cube_mode_status.load() == CatchMode::off)
         robo_inf.catch_cube_mode_status.store(CatchMode::detect_mode);
     }
   }
