@@ -3,17 +3,15 @@
 Detector::Detector(){}
 
 Detector::~Detector(){}
-string names2[] = {"blue_yellow","blue_white","blue_blue"
-        ,"red_yellow","red_white","red_red"};
+string names2[] = {"blue_up","blue_down","blue_erect"
+                ,"red_up","red_down","red_erect"};
 
-string name2_re[] = {"red_red","red_white","red_yellow",
-                    "blue_blue","blue_white","blue_white"};
 
 //注意此处的阈值是框和物体prob乘积的阈值s
 bool Detector::parse_yolov5(const Blob::Ptr &blob,int net_grid,float cof_threshold,
     vector<Rect>& o_rect,vector<float>& o_rect_cof,vector<int>& label_input){
     vector<int> anchors = get_anchors(net_grid);
-   LockedMemory<const void> blobMapped = as<MemoryBlob>(blob)->rmap();
+    LockedMemory<const void> blobMapped = as<MemoryBlob>(blob)->rmap();
    const float *output_blob = blobMapped.as<float *>();
    //80个类是85,一个类是6,n个类是n+5
    //int item_size = 6;
@@ -141,6 +139,9 @@ bool Detector::process_frame(Mat& inframe,vector<Object>& detected_objects){
     vector<int> final_id;
     dnn::NMSBoxes(origin_rect,origin_rect_cof,_cof_threshold,_nms_area_threshold,final_id);
     //根据final_id获取最终结果
+    if (final_id.size() <= 0) {
+        return false;
+    }
     for(size_t i=0;i<final_id.size();++i){
         Rect resize_rect= origin_rect[final_id[i]];
         detected_objects.push_back(Object{
@@ -148,9 +149,9 @@ bool Detector::process_frame(Mat& inframe,vector<Object>& detected_objects){
             names2[label[final_id[i]]],
             resize_rect,
             label[final_id[i]],
-            inframe.cols * 0.5  - resize_rect.y,
-            inframe.rows * 0.5  - resize_rect.x,
-            std::pow(inframe.rows * 0.5 * 0.75 - resize_rect.y*0.75,2) + std::pow(inframe.cols * 0.5 - resize_rect.x,2)
+            std::abs(inframe.cols * 0.5  - resize_rect.y),
+            std::abs(inframe.rows * 0.5  - resize_rect.x),
+            std::pow(inframe.rows * 0.8 - resize_rect.y,2) + std::pow(inframe.cols * 0.5 - resize_rect.x,2)
         });
     }
     return true;

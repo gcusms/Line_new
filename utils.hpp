@@ -101,13 +101,7 @@ struct RoboCubeStateUartBuff {
 
 //uart recive
 struct RoboInfUartBuff {
-  bool auto_catch_cube_mode {false};
-  bool manual_catch_cube_mode {false};
-  bool detect_cube_mode {false};
-  bool signal_finish{false};
-  double value_dd;
-  int robot_clor{RED};
-
+  uint8_t mode = NOTHING;
 } __attribute__((packed));
 
 bool judgeTheCube(cv::Rect &rect_input,const cv::Mat &src_img_input,
