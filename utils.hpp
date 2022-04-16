@@ -1,15 +1,20 @@
 #pragma once
 #include <atomic>
 #include <opencv4/opencv2/highgui/highgui.hpp>
-#include <fmt/core.h>
-#include <iostream>
 
 
-#define CUBE_1 0x01 // cube_1(biggest)
+#define AUTO_MODE 0x01
+#define MANUAL_MODE 0x02
+#define DETECT_MODE 0x03
+#define JUDGE_MODE 0x04
+#define NOTHING 0x05
+
+#define CUBE_1 0x01 // min
 #define CUBE_2 0x02
 #define CUBE_3 0x03
 #define CUBE_4 0x04
 #define CUBE_5 0x05
+#define CUBE_UNCERTAIN 0X06
 #define CUBE_UP    0x01
 #define CUBE_DOWN  0x02
 #define CUBE_STAND 0x03
@@ -19,43 +24,20 @@
 #define CATCH_SIGN        0X03
 #define RETURN_CUBE_STATE 0X04
 
+float distance_set = 0.0f;
 
-constexpr float cube_target_distance_offset = 13.5f;
-
-
-#define DRAW_RECT 1
 enum CatchMode {
-  wait = 0,
+  off = 0,
   spin,
   go,
-  catch_cube
-};
-
-enum RobotColor{
-  RED = 0,
-  BLUE ,
-};
-
-/**
- * @brief 块的状态
- * FRONT 正面 RECVERSE 反面 VERTICAL
- */
-enum CubeStatus
-{
-  FRONT, 
-  REVERSE,
-  VERTICAL
+  catch_cube,
+  detect_mode
 };
 
 struct RoboInf {
-  std::atomic<bool> auto_catch_cube_mode {false}; // 自动模式（自动对位并进行识别）
-  std::atomic<bool> manual_catch_cube_mode {false}; // 手动模式（没有自动对位）
-  std::atomic<bool> detect_cube_mode {false}; // 识别立起积木模式（仅进行积木状态识别）
-  std::atomic<int> robot_self_color{RED};
-  std::atomic<CatchMode> catch_cube_mode_status {CatchMode::wait};
-  std::atomic<double> value_d;  // 测试
+  std::atomic<uint8_t> mode {0x00};
+  std::atomic<CatchMode> catch_cube_mode_status {CatchMode::off};
 };
-
 
 // send R2 spin command
 struct RoboSpinCmdUartBuff {
@@ -76,20 +58,16 @@ struct RoboGoCmdUartBuff {
 // send R2 catch command
 // cube_state: 0x01 - yellow, 0x02 - white, 0x03 - stand
 // cube_type: 0x01 - 0x05
-// cube_needen: 0x00 move 0x01 no move
 struct RoboCatchCmdUartBuff {
   uint8_t S_flag = 'S';
-  uint8_t cube_needen = 0x00;
-  // uint8_t cmd_type = CATCH_SIGN;
+  uint8_t cmd_type = CATCH_SIGN;
   uint8_t cube_state = 0x00;
   uint8_t cube_type = 0x00;
-  float yaw_angle = 0.f;
-  int distance_set = 0;
   uint8_t E_flag = 'E';
 } __attribute__((packed));
 
 // send R2 cube status
-// 0x01 white 0x02 yellow
+// 0x01 white 0x02 yellow 
 // cube_type: 0x01 - 0x05
 struct RoboCubeStateUartBuff {
   uint8_t S_flag = 'S';
@@ -103,51 +81,5 @@ struct RoboCubeStateUartBuff {
 struct RoboInfUartBuff {
   uint8_t mode = NOTHING;
 } __attribute__((packed));
-
-bool judgeTheCube(cv::Rect &rect_input,const cv::Mat &src_img_input,
-                      RoboInf &robo_inf,RoboCatchCmdUartBuff &reset_buff,float& img_sub)
-  {
-    // 640 * 480
-    // 还原长度
-    img_sub  = rect_input.x + rect_input.width *0.5;
-    reset_buff.distance_set = (src_img_input.rows - rect_input.y);
-    std::cout << "distance_set = " <<reset_buff.distance_set << std::endl;
-    if (reset_buff.distance_set < 0) {
-      reset_buff.distance_set = 0;
-    }
-    if(img_sub > src_img_input.cols * 0.53 && 
-       img_sub < src_img_input.cols *0.57) {
-      img_sub -= src_img_input.cols *((0.53+0.57) * 0.5);
-      if (reset_buff.distance_set < 200) {
-         reset_buff.cube_needen = 0x02;
-         return true;
-      }
-      reset_buff.cube_needen = 0x01;
-      return true;
-    }
-    img_sub -= src_img_input.cols *((0.53+0.57)* 0.5);
-    reset_buff.cube_needen = 0x00;
-    return false;
-}
-
-
-bool judgeTheCube_new(cv::Rect &rect_input,const cv::Mat src_img_input,
-                      RoboInf &robo_inf)
-  {
-    int center_x_judge = rect_input.x + rect_input.width *0.5;
-    if(center_x_judge > src_img_input.cols * 0.3 && 
-       center_x_judge < src_img_input.cols *0.7) {
-      return true;
-    }
-  return false;
-}
-
-void resetRect(cv::Rect & input_r)
-{
-  static float rate = 480.0 / 640.0;
-  input_r.height *= rate;
-  input_r.y *= rate;
-  // std::cout << "rate:" << rate << std::endl;
-}
 
 

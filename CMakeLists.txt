@@ -9,21 +9,20 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g -Wfatal-errors -D_MWAITXINT
 
 include_directories(
     #OpenVINO推理引擎的头文件
-    /opt/intel/openvino_2021/deployment_tools/inference_engine/include/
-    /opt/intel/openvino_2021/deployment_tools/ngraph/include/
+    /home/wolf/intel/openvino_2021/deployment_tools/inference_engine/include/
+    /home/wolf/intel/openvino_2021/deployment_tools/ngraph/include/
 )
 
 #查找必要的依赖包
 find_package(OpenCV REQUIRED)
-set(InferenceEngine_DIR "/opt/intel/openvino_2021/deployment_tools/inference_engine/share")
+set(InferenceEngine_DIR "/home/wolf/intel/openvino_2021/deployment_tools/inference_engine/share")
 find_package(InferenceEngine)
-set(ngraph_DIR "/opt/intel/openvino_2021/deployment_tools/ngraph")
+set(ngraph_DIR "/home/wolf/intel/openvino_2021/deployment_tools/ngraph")
 # find_package(ngraph REQUIRED)
-set(ngraph_LIBRARIES "/opt/intel/openvino_2021/deployment_tools/ngraph/lib/libngraph.so")
-set(ngraph_INCLUDE_DIRS "/opt/intel/openvino_2021/deployment_tools/ngraph/include/")
+set(ngraph_LIBRARIES "/home/wolf/intel/openvino_2021/deployment_tools/ngraph/lib/libngraph.so")
+set(ngraph_INCLUDE_DIRS "/home/wolf/intel/openvino_2021/deployment_tools/ngraph/include/")
 
 
-include_directories(${PROJECT_SOURCE_DIR}/slovePnP)
 
 # 编译detector.so black_box
 include_directories(${PROJECT_SOURCE_DIR}/infer)

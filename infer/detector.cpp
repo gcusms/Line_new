@@ -1,6 +1,11 @@
 #include "detector.h"
 #include <omp.h>
-Detector::Detector(){}
+Detector::Detector(const std::string& path_xml,const std::string& path_bin,
+                  float& conf_detect,float &conf_frame):_xml_path(path_xml),_bin_path(path_bin),_cof_threshold(conf_detect),
+                  _nms_area_threshold(conf_frame){
+    this->init();
+    
+}
 
 Detector::~Detector(){}
 string names2[] = {"blue_up","blue_down","blue_erect"
@@ -36,7 +41,7 @@ bool Detector::parse_yolov5(const Blob::Ptr &blob,int net_grid,float cof_thresho
                
                 double max_prob = 0;
                 int idx=0;
-                for(int t=5;t<11;++t){
+                for(int t=5;t<item_size;++t){
                     double tp= output_blob[n*net_grid*net_grid*item_size + i*net_grid*item_size + j *item_size+ t];
                     tp = sigmoid(tp);
                     if(tp > max_prob){
@@ -66,12 +71,17 @@ bool Detector::parse_yolov5(const Blob::Ptr &blob,int net_grid,float cof_thresho
 }
 
 //初始化
-bool Detector::init(string xml_path,double cof_threshold,double nms_area_threshold){
-    _xml_path = xml_path;
-    _cof_threshold = cof_threshold;
-    _nms_area_threshold = nms_area_threshold;
+bool Detector::init(){
+    // _xml_path = xml_path;
+    // _cof_threshold = cof_threshold;
+    // _nms_area_threshold = nms_area_threshold;
     Core ie;
-    auto cnnNetwork = ie.ReadNetwork(_xml_path); 
+    if (_xml_path == " ") {
+        std::cout << "the path of the model load fail!!!" << std::endl;
+        return false;
+    }
+    auto cnnNetwork = ie.ReadNetwork(_xml_path,_bin_path); 
+
     //输入设置
     InputsDataMap inputInfo(cnnNetwork.getInputsInfo());
     InputInfo::Ptr& input = inputInfo.begin()->second;
@@ -87,8 +97,9 @@ bool Detector::init(string xml_path,double cof_threshold,double nms_area_thresho
         output.second->setPrecision(Precision::FP32);
     }
     //获取可执行网络
-    //_network =  ie.LoadNetwork(cnnNetwork, "GPU");
+    // _network =  ie.LoadNetwork(cnnNetwork, "GPU");
     _network =  ie.LoadNetwork(cnnNetwork, "CPU");
+    
     return true;
 }
 
@@ -132,7 +143,7 @@ bool Detector::process_frame(Mat& inframe,vector<Object>& detected_objects){
     for (auto &output : _outputinfo) {
         auto output_name = output.first;
         Blob::Ptr blob = infer_request->GetBlob(output_name);
-       parse_yolov5(blob,s[i],_cof_threshold,origin_rect,origin_rect_cof,label);
+        parse_yolov5(blob,s[i],_cof_threshold,origin_rect,origin_rect_cof,label);
         ++i;
     }
     //后处理获得最终检测结果

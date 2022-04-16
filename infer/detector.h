@@ -29,10 +29,10 @@ public:
             return dis_rows < y.dis_rows; 
         }
     };
-    Detector();
+    Detector(const std::string& path_xml,const std::string& path_bin,float& conf_detect,float &conf_frame);
     ~Detector();
     //初始化
-    bool init(string xml_path,double cof_threshold,double nms_area_threshold);
+    bool init();
     //释放资源
     bool uninit();
     //处理图像获取结果
@@ -50,6 +50,7 @@ private:
     string _input_name;
     //参数区
     string _xml_path;                             //OpenVINO模型xml文件路径
+    string _bin_path;                             //OpenVINO模型bin文件路径
     double _cof_threshold;                //置信度阈值,计算方法是框置信度乘以物品种类置信度
     double _nms_area_threshold;  //nms最小重叠面积阈值
 };
